@@ -1,0 +1,72 @@
+# Using SVM (Support Vector Machines) build and train a model using human cell records, and classify cells to whether the samples are benign or malignant.
+# First lets import libraries 
+
+import pandas as pd
+import pylab as pl
+import numpy as np
+import scipy.optimize as opt
+from sklearn import preprocessing
+from sklearn.model_selection import train_test_split
+%matplotlib inline 
+import matplotlib.pyplot as plt
+
+# Load Data From CSV File
+
+cell_df = pd.read_csv("cell_samples.csv")
+cell_df.head()
+
+# Data pre-processing and selection
+
+cell_df.dtypes
+
+# we can to drop values that are not numerical or
+#changing the data type to int
+
+cell_df = cell_df[pd.to_numeric(cell_df['BareNuc'], errors='coerce').notnull()]
+cell_df['BareNuc'] = cell_df['BareNuc'].astype('int')
+cell_df.dtypes
+
+feature_df = cell_df[['Clump', 'UnifSize', 'UnifShape', 'MargAdh', 'SingEpiSize', 'BareNuc', 'BlandChrom', 'NormNucl', 'Mit']]
+X = np.asarray(feature_df)
+X[0:5]
+
+# We want the model to predict the value of Class (that is, benign (=2) or malignant (=4)). As this field can have one of only two possible values
+
+cell_df['Class'] = cell_df['Class'].astype('int')
+y = np.asarray(cell_df['Class'])
+y [0:5]
+
+#Train/Test dataset
+
+X_train, X_test, y_train, y_test = train_test_split( X, y, test_size=0.2, random_state=4)
+print ('Train set:', X_train.shape,  y_train.shape)
+print ('Test set:', X_test.shape,  y_test.shape)
+
+# Modeling (SVM with Scikit-learn)
+
+from sklearn import svm
+clf = svm.SVC(kernel='rbf')
+clf.fit(X_train, y_train)
+
+#predict new values
+
+yhat = clf.predict(X_test)
+yhat [0:5]
+
+# Evaluation
+
+from sklearn.metrics import f1_score
+f1_score(y_test, yhat, average='weighted') 
+
+# OR
+
+from sklearn.metrics import jaccard_similarity_score
+jaccard_similarity_score(y_test, yhat)
+
+# we rebuild the model,using linear__ kernel
+
+clf2 = svm.SVC(kernel='linear')
+clf2.fit(X_train, y_train) 
+yhat2 = clf2.predict(X_test)
+print("Avg F1-score: %.4f" % f1_score(y_test, yhat2, average='weighted'))
+print("Jaccard score: %.4f" % jaccard_similarity_score(y_test, yhat2))
